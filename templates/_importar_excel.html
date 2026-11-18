@@ -1,0 +1,31 @@
+{# Modal reutilizado en Productos, Clientes y Proveedores. Las variables se
+   definen en cada plantilla antes de incluir este archivo. #}
+<div class="modal fade" id="importExcelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <form method="post" action="{{ url_for('importar_apartado_excel', tipo=tipo_excel) }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="modal-header">
+                    <div><span class="section-kicker">IMPORTACIÓN</span><h5 class="modal-title">Importar {{ titulo_excel }} desde Excel</h5></div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="excel-steps">
+                        <div><span>1</span><p><strong>Descarga el Excel del apartado.</strong> Ese archivo es la plantilla correcta.</p></div>
+                        <div><span>2</span><p><strong>Edita o agrega filas.</strong> No cambies el nombre ni el orden de los encabezados.</p></div>
+                        <div><span>3</span><p><strong>Selecciona el mismo archivo.</strong> Primero se validará completo y después se guardará.</p></div>
+                    </div>
+                    <div class="alert alert-primary small"><i class="bi bi-info-circle-fill me-2"></i>{{ nota_identificador }}</div>
+                    <div class="alert alert-warning small"><i class="bi bi-exclamation-triangle-fill me-2"></i>Eliminar una fila del Excel no elimina el registro de Northwind. Usa el botón Eliminar del apartado cuando corresponda.</div>
+                    <label class="form-label" for="archivoExcel-{{ tipo_excel }}">Archivo de Excel <span class="required">*</span></label>
+                    <input class="form-control" id="archivoExcel-{{ tipo_excel }}" type="file" name="archivo_excel" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+                    <div class="form-hint">Tamaño máximo: 5 MB. Límite: 2,000 filas.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-cloud-arrow-up me-1"></i>Validar e importar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Sistema de administración para la base de datos Northwind">
+    <title>{{ titulo }} | Northwind Manager</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+</head>
+<body>
+    {# base.html es la plantilla madre: las demás páginas reutilizan este menú,
+       encabezado, mensajes y scripts mediante {% extends 'base.html' %}. #}
+    <div class="app-shell">
+        {# Menú lateral visible en pantallas grandes. #}
+        <aside class="sidebar d-none d-lg-flex flex-column">
+            <a class="brand" href="{{ url_for('dashboard') }}">
+                <span class="brand-icon"><i class="bi bi-boxes"></i></span>
+                <span>Northwind<small>Manager</small></span>
+            </a>
+            {% include '_navigation.html' %}
+            <a class="diagnostic-link" href="{{ url_for('diagnostico') }}">
+                <i class="bi bi-database-check"></i> Diagnóstico SQL
+            </a>
+        </aside>
+
+        {# En celular Bootstrap convierte el mismo menú en un panel desplegable. #}
+        <div class="offcanvas offcanvas-start sidebar-mobile" tabindex="-1" id="mobileSidebar">
+            <div class="offcanvas-header">
+                <a class="brand" href="{{ url_for('dashboard') }}">
+                    <span class="brand-icon"><i class="bi bi-boxes"></i></span>
+                    <span>Northwind<small>Manager</small></span>
+                </a>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+            </div>
+            <div class="offcanvas-body d-flex flex-column">
+                {% include '_navigation.html' %}
+                <a class="diagnostic-link" href="{{ url_for('diagnostico') }}">
+                    <i class="bi bi-database-check"></i> Diagnóstico SQL
+                </a>
+            </div>
+        </div>
+
+        <main class="main-content">
+            <header class="topbar">
+                <button class="btn sidebar-toggle d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-label="Abrir menú">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div>
+                    <span class="topbar-eyebrow">Panel de administración</span>
+                    <h1>{{ titulo }}</h1>
+                </div>
+                <div class="topbar-user d-none d-sm-flex">
+                    <span class="user-avatar"><i class="bi bi-person-fill"></i></span>
+                    <span class="user-copy">
+                        <strong>{{ session.usuario_nombre }}</strong>
+                        <small>Administrador</small>
+                    </span>
+                    <form method="post" action="{{ url_for('cerrar_sesion') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="icon-button" title="Cerrar sesión" aria-label="Cerrar sesión">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+            </header>
+
+            <div class="content-area">
+                {# Los mensajes temporales muestran altas, ediciones, eliminaciones o errores. #}
+                {% with mensajes = get_flashed_messages(with_categories=true) %}
+                    {% if mensajes %}
+                        <div class="flash-stack">
+                            {% for categoria, mensaje in mensajes %}
+                                {# Bootstrap usa nombres internos en inglés para los
+                                   colores; el encabezado que ve el usuario es español. #}
+                                <div class="alert alert-{{ categoria }} alert-dismissible fade show shadow-sm" role="alert">
+                                    <i class="bi {% if categoria == 'success' %}bi-check-circle-fill{% elif categoria == 'warning' %}bi-exclamation-triangle-fill{% else %}bi-x-circle-fill{% endif %} me-2"></i>
+                                    {% if categoria == 'success' %}<strong>Operación correcta:</strong>
+                                    {% elif categoria == 'warning' %}<strong>Aviso:</strong>
+                                    {% else %}<strong>Error:</strong>{% endif %}
+                                    {{ mensaje }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                {# Cada módulo reemplaza únicamente este bloque con su contenido. #}
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    {# Un solo modal de eliminación se reutiliza para productos y clientes. #}
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body text-center p-4">
+                    <div class="danger-icon mx-auto mb-3"><i class="bi bi-trash3"></i></div>
+                    <h5>¿Eliminar registro?</h5>
+                    <p class="text-secondary small mb-4" id="deleteMessage">Esta acción no se puede deshacer.</p>
+                    <form id="deleteForm" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

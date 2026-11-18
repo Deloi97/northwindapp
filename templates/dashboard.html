@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block content %}
+{% if not conexion_correcta %}
+<div class="connection-alert mb-4">
+    <div class="connection-alert-icon"><i class="bi bi-database-x"></i></div>
+    <div class="flex-grow-1">
+        <h2>Configura la conexión con SQL Server</h2>
+        <p>No fue posible consultar Northwind. Copia <code>.env.example</code> como <code>.env</code> y completa los datos de tu instancia.</p>
+        <a href="{{ url_for('diagnostico') }}" class="btn btn-sm btn-outline-danger">Ver diagnóstico</a>
+    </div>
+</div>
+{% endif %}
+
+<div class="welcome-panel mb-4">
+    <div>
+        <span class="section-kicker">RESUMEN GENERAL</span>
+        <h2>Bienvenido a Northwind Manager</h2>
+        <p>Consulta y administra la información principal de la empresa desde un solo lugar.</p>
+    </div>
+    <div class="welcome-mark d-none d-md-flex"><i class="bi bi-bar-chart-line"></i></div>
+</div>
+
+<div class="row g-3 g-xl-4 mb-4">
+    {% set tarjetas = [
+        ('productos', 'Productos', 'bi-box-seam', 'blue', url_for('productos')),
+        ('clientes', 'Clientes', 'bi-people', 'cyan', url_for('clientes')),
+        ('proveedores', 'Proveedores', 'bi-truck', 'violet', url_for('proveedores')),
+        ('pedidos', 'Pedidos', 'bi-receipt', 'amber', url_for('pedidos'))
+    ] %}
+    {% for clave, etiqueta, icono, color, enlace in tarjetas %}
+    <div class="col-12 col-sm-6 col-xl-3">
+        <a href="{{ enlace }}" class="stat-card stat-{{ color }}">
+            <div class="stat-icon"><i class="bi {{ icono }}"></i></div>
+            <div>
+                <span>{{ etiqueta }}</span>
+                <strong>{{ estadisticas[clave] }}</strong>
+                <small>Ver registros <i class="bi bi-arrow-right"></i></small>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <section class="panel h-100">
+            <div class="panel-header">
+                <div>
+                    <span class="section-kicker">ACTIVIDAD</span>
+                    <h2>Pedidos recientes</h2>
+                </div>
+                <a href="{{ url_for('pedidos') }}" class="btn btn-soft-primary btn-sm">Ver todos</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table app-table align-middle mb-0">
+                    <thead><tr><th>Pedido</th><th>Cliente</th><th>Fecha</th><th></th></tr></thead>
+                    <tbody>
+                    {% for pedido in ultimos_pedidos %}
+                        <tr>
+                            <td><span class="id-pill">#{{ pedido.OrderID }}</span></td>
+                            <td class="fw-semibold">{{ pedido.CompanyName or 'Sin cliente' }}</td>
+                            <td>{{ pedido.OrderDate|fecha }}</td>
+                            <td class="text-end"><a href="{{ url_for('pedidos', q=pedido.OrderID) }}" class="icon-button" aria-label="Consultar"><i class="bi bi-arrow-up-right"></i></a></td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4"><div class="empty-state compact"><i class="bi bi-inbox"></i><span>No hay pedidos para mostrar.</span></div></td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    <div class="col-lg-4">
+        <section class="panel h-100">
+            <div class="panel-header"><div><span class="section-kicker">ATAJOS</span><h2>Acceso rápido</h2></div></div>
+            <div class="quick-actions">
+                <a href="{{ url_for('productos') }}"><span><i class="bi bi-plus-lg"></i></span><div><strong>Nuevo producto</strong><small>Administrar inventario</small></div><i class="bi bi-chevron-right"></i></a>
+                <a href="{{ url_for('clientes') }}"><span><i class="bi bi-person-plus"></i></span><div><strong>Nuevo cliente</strong><small>Registrar una empresa</small></div><i class="bi bi-chevron-right"></i></a>
+                <a href="{{ url_for('categorias') }}"><span><i class="bi bi-diagram-3"></i></span><div><strong>Ver categorías</strong><small>Consultar asociaciones</small></div><i class="bi bi-chevron-right"></i></a>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

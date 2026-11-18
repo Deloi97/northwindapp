@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-xl-5">
+        <section class="panel h-100">
+            <div class="panel-header"><div><span class="section-kicker">CATÁLOGO</span><h2>Categorías</h2><p>Selecciona una para consultar sus productos</p></div></div>
+            <div class="category-list">
+                {% for categoria in categorias %}
+                <a href="{{ url_for('categorias', category_id=categoria.CategoryID) }}" class="category-item {{ 'selected' if seleccionada and seleccionada.CategoryID == categoria.CategoryID }}">
+                    <span class="category-icon"><i class="bi bi-tag"></i></span>
+                    <span class="category-copy"><strong>{{ categoria.CategoryName }}</strong><small>{{ categoria.Description or 'Sin descripción' }}</small></span>
+                    <span class="category-count">{{ categoria.ProductCount }}</span>
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+    <div class="col-xl-7">
+        <section class="panel h-100">
+            {% if seleccionada %}
+            <div class="panel-header"><div><span class="section-kicker">PRODUCTOS ASOCIADOS</span><h2>{{ seleccionada.CategoryName }}</h2><p>{{ seleccionada.Description or 'Sin descripción' }}</p></div><span class="count-badge">{{ productos|length }} productos</span></div>
+            <div class="table-responsive">
+                <table class="table app-table align-middle mb-0">
+                    <thead><tr><th>Producto</th><th>Precio</th><th>Existencias</th><th>Estado</th></tr></thead>
+                    <tbody>
+                    {% for producto in productos %}
+                    <tr>
+                        <td><a class="table-link" href="{{ url_for('productos', q=producto.ProductName) }}">{{ producto.ProductName }}</a><div class="cell-note">ID {{ producto.ProductID }}</div></td>
+                        <td class="fw-semibold">{{ producto.UnitPrice|moneda }}</td>
+                        <td>{{ producto.UnitsInStock or 0 }}</td>
+                        <td>{% if producto.Discontinued %}<span class="status-badge inactive">Descontinuado</span>{% else %}<span class="status-badge active">Activo</span>{% endif %}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4"><div class="empty-state compact"><i class="bi bi-box"></i><span>Esta categoría no tiene productos.</span></div></td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="selection-placeholder"><div><i class="bi bi-diagram-3"></i></div><h2>Consulta los productos por categoría</h2><p>Elige una categoría de la lista para ver todos los productos relacionados directamente desde Northwind.</p></div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="panel">
+    <div class="panel-header flex-wrap gap-3">
+        <div><span class="section-kicker">INVENTARIO</span><h2>Catálogo de productos</h2><p>{{ productos|length }} registros encontrados</p></div>
+        <div class="header-actions">
+            <a class="btn btn-outline-success" href="{{ url_for('exportar_apartado_excel', tipo='productos', q=q, categoria=categoria_seleccionada) }}">
+                <i class="bi bi-file-earmark-arrow-down me-1"></i> Descargar Excel
+            </a>
+            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                <i class="bi bi-file-earmark-arrow-up me-1"></i> Importar Excel
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productModal">
+                <i class="bi bi-plus-lg me-1"></i> Agregar producto
+            </button>
+        </div>
+    </div>
+    {# GET conserva los filtros en la URL y permite compartir o recargar la búsqueda. #}
+    <form class="filter-bar" method="get">
+        <div class="search-control">
+            <i class="bi bi-search"></i>
+            <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Buscar por nombre..." aria-label="Buscar productos">
+        </div>
+        <select name="categoria" class="form-select" aria-label="Filtrar por categoría">
+            <option value="">Todas las categorías</option>
+            {% for categoria in categorias %}
+            <option value="{{ categoria.CategoryID }}" {{ 'selected' if categoria_seleccionada == categoria.CategoryID|string }}>{{ categoria.CategoryName }}</option>
+            {% endfor %}
+        </select>
+        <button class="btn btn-dark" type="submit">Filtrar</button>
+        {% if q or categoria_seleccionada %}<a class="btn btn-light" href="{{ url_for('productos') }}" title="Limpiar filtros"><i class="bi bi-x-lg"></i></a>{% endif %}
+    </form>
+
+    <div class="table-responsive">
+        <table class="table app-table align-middle mb-0">
+            <thead><tr><th>Producto</th><th>Categoría</th><th>Proveedor</th><th>Precio</th><th>Existencias</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
+            <tbody>
+            {% for producto in productos %}
+                <tr>
+                    <td><div class="record-title"><span class="record-avatar product"><i class="bi bi-box"></i></span><div><strong>{{ producto.ProductName }}</strong><small>ID {{ producto.ProductID }} · {{ producto.QuantityPerUnit or 'Sin presentación' }}</small></div></div></td>
+                    <td><span class="category-chip">{{ producto.CategoryName or 'Sin categoría' }}</span></td>
+                    <td>{{ producto.SupplierName or 'Sin proveedor' }}</td>
+                    <td class="fw-semibold">{{ producto.UnitPrice|moneda }}</td>
+                    <td><span class="stock-value {{ 'stock-low' if (producto.UnitsInStock or 0) <= (producto.ReorderLevel or 0) }}">{{ producto.UnitsInStock or 0 }}</span></td>
+                    <td>{% if producto.Discontinued %}<span class="status-badge inactive">Descontinuado</span>{% else %}<span class="status-badge active">Activo</span>{% endif %}</td>
+                    <td class="text-end action-buttons">
+                        {# El registro viaja como JSON al modal común; app.js llena sus controles. #}
+                        <button class="icon-button edit-button" title="Editar" data-bs-toggle="modal" data-bs-target="#productModal"
+                                data-record='{{ producto|tojson }}' data-action="{{ url_for('producto_editar', producto_id=producto.ProductID) }}"><i class="bi bi-pencil"></i></button>
+                        <button class="icon-button danger delete-button" title="Eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                data-action="{{ url_for('producto_eliminar', producto_id=producto.ProductID) }}" data-name="{{ producto.ProductName }}"><i class="bi bi-trash3"></i></button>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="7"><div class="empty-state"><i class="bi bi-search"></i><strong>No encontramos productos</strong><span>Prueba con otros términos o agrega un registro.</span></div></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{# El mismo formulario sirve para INSERT y UPDATE; JavaScript cambia su action. #}
+<div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <form method="post" action="{{ url_for('producto_nuevo') }}" data-create-action="{{ url_for('producto_nuevo') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="modal-header"><div><span class="section-kicker">INVENTARIO</span><h5 class="modal-title">Agregar producto</h5></div><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-8"><label class="form-label">Nombre del producto <span class="required">*</span></label><input class="form-control" name="product_name" maxlength="40" required data-field="ProductName"></div>
+                        <div class="col-md-4"><label class="form-label">Precio unitario</label><input class="form-control" type="number" name="unit_price" min="0" step="0.01" data-field="UnitPrice"></div>
+                        <div class="col-md-6"><label class="form-label">Proveedor</label><select class="form-select" name="supplier_id" data-field="SupplierID"><option value="">Sin proveedor</option>{% for proveedor in proveedores %}<option value="{{ proveedor.SupplierID }}">{{ proveedor.CompanyName }}</option>{% endfor %}</select></div>
+                        <div class="col-md-6"><label class="form-label">Categoría</label><select class="form-select" name="category_id" data-field="CategoryID"><option value="">Sin categoría</option>{% for categoria in categorias %}<option value="{{ categoria.CategoryID }}">{{ categoria.CategoryName }}</option>{% endfor %}</select></div>
+                        <div class="col-md-6"><label class="form-label">Cantidad por unidad</label><input class="form-control" name="quantity_per_unit" maxlength="20" placeholder="Ej. 24 botellas de 330 ml" data-field="QuantityPerUnit"></div>
+                        <div class="col-md-3"><label class="form-label">Existencias</label><input class="form-control" type="number" name="units_in_stock" min="0" data-field="UnitsInStock"></div>
+                        <div class="col-md-3"><label class="form-label">En pedido</label><input class="form-control" type="number" name="units_on_order" min="0" data-field="UnitsOnOrder"></div>
+                        <div class="col-md-4"><label class="form-label">Nivel de reorden</label><input class="form-control" type="number" name="reorder_level" min="0" data-field="ReorderLevel"></div>
+                        <div class="col-md-8 d-flex align-items-end"><div class="form-check form-switch mb-2"><input class="form-check-input" type="checkbox" value="1" name="discontinued" id="productDiscontinued" data-field="Discontinued"><label class="form-check-label" for="productDiscontinued">Producto descontinuado</label></div></div>
+                    </div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Guardar producto</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+{% set tipo_excel = 'productos' %}
+{% set titulo_excel = 'productos' %}
+{% set nota_identificador = 'Deja Identificador vacío para crear un producto. Conserva un identificador existente para actualizarlo.' %}
+{% include '_importar_excel.html' %}
+{% endblock %}

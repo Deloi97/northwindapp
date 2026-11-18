@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="error-page">
+    <span>{{ codigo }}</span>
+    <h2>{{ titulo }}</h2>
+    <p>{{ mensaje }}</p>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary"><i class="bi bi-house me-1"></i>Volver al panel principal</a>
+</div>
+{% endblock %}

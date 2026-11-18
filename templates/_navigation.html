@@ -1,0 +1,21 @@
+<nav class="nav flex-column app-nav" aria-label="Navegación principal">
+    <span class="nav-caption">MENÚ PRINCIPAL</span>
+    <a class="nav-link {{ 'active' if request.endpoint == 'dashboard' }}" href="{{ url_for('dashboard') }}">
+        <i class="bi bi-grid-1x2"></i><span>Panel principal</span>
+    </a>
+    <a class="nav-link {{ 'active' if request.endpoint in ['productos', 'producto_nuevo', 'producto_editar'] }}" href="{{ url_for('productos') }}">
+        <i class="bi bi-box-seam"></i><span>Productos</span>
+    </a>
+    <a class="nav-link {{ 'active' if request.endpoint in ['clientes', 'cliente_nuevo', 'cliente_editar'] }}" href="{{ url_for('clientes') }}">
+        <i class="bi bi-people"></i><span>Clientes</span>
+    </a>
+    <a class="nav-link {{ 'active' if request.endpoint in ['proveedores', 'proveedor_nuevo', 'proveedor_editar'] }}" href="{{ url_for('proveedores') }}">
+        <i class="bi bi-truck"></i><span>Proveedores</span>
+    </a>
+    <a class="nav-link {{ 'active' if request.endpoint == 'categorias' }}" href="{{ url_for('categorias') }}">
+        <i class="bi bi-tags"></i><span>Categorías</span>
+    </a>
+    <a class="nav-link {{ 'active' if request.endpoint == 'pedidos' }}" href="{{ url_for('pedidos') }}">
+        <i class="bi bi-receipt"></i><span>Pedidos</span>
+    </a>
+</nav>

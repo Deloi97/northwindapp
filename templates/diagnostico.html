@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-xl-9">
+        <section class="panel">
+            <div class="panel-header">
+                <div><span class="section-kicker">CONFIGURACIÓN</span><h2>Estado de SQL Server</h2></div>
+                <a href="{{ url_for('diagnostico') }}" class="btn btn-soft-primary btn-sm"><i class="bi bi-arrow-clockwise me-1"></i>Probar de nuevo</a>
+            </div>
+            {% if error %}
+            <div class="diagnostic-status status-error">
+                <i class="bi bi-x-circle-fill"></i>
+                <div><strong>No se pudo establecer la conexión</strong><p>{{ error }}</p></div>
+            </div>
+            <div class="setup-steps">
+                <h3>Qué debes revisar</h3>
+                <ol>
+                    <li>Copia el archivo <code>.env.example</code> y llámalo <code>.env</code>.</li>
+                    <li>Escribe el nombre de tu servidor e instancia en <code>DB_SERVER</code>.</li>
+                    <li>Confirma el tipo de autenticación y el controlador ODBC instalado.</li>
+                    <li>Comprueba que SQL Server esté iniciado y que la base Northwind exista.</li>
+                </ol>
+            </div>
+            {% else %}
+            <div class="diagnostic-status status-ok">
+                <i class="bi bi-check-circle-fill"></i>
+                <div><strong>Conexión establecida correctamente</strong><p>La aplicación puede comunicarse con Microsoft SQL Server.</p></div>
+            </div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4"><div class="info-tile"><span>Servidor</span><strong>{{ datos.servidor }}</strong></div></div>
+                <div class="col-md-4"><div class="info-tile"><span>Base de datos</span><strong>{{ datos.base_datos }}</strong></div></div>
+                <div class="col-md-4"><div class="info-tile"><span>Usuario</span><strong>{{ datos.usuario_actual }}</strong></div></div>
+            </div>
+            {% if esquema.correcto %}
+            <div class="alert alert-success mb-0"><i class="bi bi-check2-circle me-2"></i>Se encontraron las seis tablas requeridas de Northwind.</div>
+            {% else %}
+            <div class="alert alert-warning mb-0"><strong>Tablas faltantes:</strong> {{ esquema.faltantes|join(', ') }}. Verifica que esta sea la versión clásica de Northwind.</div>
+            {% endif %}
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

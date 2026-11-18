@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="panel">
+    <div class="panel-header flex-wrap gap-3">
+        <div><span class="section-kicker">ABASTECIMIENTO</span><h2>Proveedores</h2><p>{{ proveedores|length }} registros encontrados</p></div>
+        <div class="header-actions">
+            <a class="btn btn-outline-success" href="{{ url_for('exportar_apartado_excel', tipo='proveedores', q=q) }}"><i class="bi bi-file-earmark-arrow-down me-1"></i> Descargar Excel</a>
+            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importExcelModal"><i class="bi bi-file-earmark-arrow-up me-1"></i> Importar Excel</button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#supplierModal"><i class="bi bi-plus-lg me-1"></i> Agregar proveedor</button>
+        </div>
+    </div>
+    <form class="filter-bar" method="get">
+        <div class="search-control flex-grow-1"><i class="bi bi-search"></i><input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Buscar empresa o contacto..." aria-label="Buscar proveedores"></div>
+        <button class="btn btn-dark" type="submit">Buscar</button>
+        {% if q %}<a class="btn btn-light" href="{{ url_for('proveedores') }}"><i class="bi bi-x-lg"></i></a>{% endif %}
+    </form>
+    <div class="table-responsive">
+        <table class="table app-table align-middle mb-0">
+            <thead><tr><th>Empresa</th><th>Contacto</th><th>Ubicación</th><th>Teléfono</th><th>Sitio web</th><th class="text-end">Acciones</th></tr></thead>
+            <tbody>
+            {% for proveedor in proveedores %}
+                <tr>
+                    <td><div class="record-title"><span class="record-avatar supplier"><i class="bi bi-building"></i></span><div><strong>{{ proveedor.CompanyName }}</strong><small>ID {{ proveedor.SupplierID }}</small></div></div></td>
+                    <td><strong>{{ proveedor.ContactName or '—' }}</strong><div class="cell-note">{{ proveedor.ContactTitle or '' }}</div></td>
+                    <td>{{ proveedor.City or '—' }}{% if proveedor.Country %}<div class="cell-note">{{ proveedor.Country }}</div>{% endif %}</td>
+                    <td>{{ proveedor.Phone or '—' }}</td>
+                    <td>{% if proveedor.HomePage %}<span class="text-truncate d-inline-block homepage-cell" title="{{ proveedor.HomePage }}">{{ proveedor.HomePage }}</span>{% else %}—{% endif %}</td>
+                    <td class="text-end"><button class="icon-button edit-button" title="Editar" data-bs-toggle="modal" data-bs-target="#supplierModal" data-record='{{ proveedor|tojson }}' data-action="{{ url_for('proveedor_editar', supplier_id=proveedor.SupplierID) }}"><i class="bi bi-pencil"></i></button></td>
+                </tr>
+            {% else %}
+                <tr><td colspan="6"><div class="empty-state"><i class="bi bi-truck"></i><strong>No encontramos proveedores</strong><span>Prueba con otro nombre o agrega un registro.</span></div></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="modal fade" id="supplierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content border-0 shadow-lg">
+        <form method="post" action="{{ url_for('proveedor_nuevo') }}" data-create-action="{{ url_for('proveedor_nuevo') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="modal-header"><div><span class="section-kicker">ABASTECIMIENTO</span><h5 class="modal-title">Agregar proveedor</h5></div><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body"><div class="row g-3">
+                <div class="col-12"><label class="form-label">Nombre de la empresa <span class="required">*</span></label><input class="form-control" name="company_name" maxlength="40" required data-field="CompanyName"></div>
+                <div class="col-md-6"><label class="form-label">Nombre del contacto</label><input class="form-control" name="contact_name" maxlength="30" data-field="ContactName"></div>
+                <div class="col-md-6"><label class="form-label">Cargo del contacto</label><input class="form-control" name="contact_title" maxlength="30" data-field="ContactTitle"></div>
+                <div class="col-12"><label class="form-label">Dirección</label><input class="form-control" name="address" maxlength="60" data-field="Address"></div>
+                <div class="col-md-4"><label class="form-label">Ciudad</label><input class="form-control" name="city" maxlength="15" data-field="City"></div>
+                <div class="col-md-4"><label class="form-label">Región / Estado</label><input class="form-control" name="region" maxlength="15" data-field="Region"></div>
+                <div class="col-md-4"><label class="form-label">Código postal</label><input class="form-control" name="postal_code" maxlength="10" data-field="PostalCode"></div>
+                <div class="col-md-4"><label class="form-label">País</label><input class="form-control" name="country" maxlength="15" data-field="Country"></div>
+                <div class="col-md-4"><label class="form-label">Teléfono</label><input class="form-control" type="tel" name="phone" maxlength="24" data-field="Phone"></div>
+                <div class="col-md-4"><label class="form-label">Fax</label><input class="form-control" type="tel" name="fax" maxlength="24" data-field="Fax"></div>
+                <div class="col-12"><label class="form-label">Página web</label><input class="form-control" name="home_page" maxlength="255" data-field="HomePage" placeholder="https://..."></div>
+            </div></div>
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Guardar proveedor</button></div>
+        </form>
+    </div></div>
+</div>
+{% set tipo_excel = 'proveedores' %}
+{% set titulo_excel = 'proveedores' %}
+{% set nota_identificador = 'Deja Identificador vacío para crear un proveedor. Conserva un identificador existente para actualizarlo.' %}
+{% include '_importar_excel.html' %}
+{% endblock %}
